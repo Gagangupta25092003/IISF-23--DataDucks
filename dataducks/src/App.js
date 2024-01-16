@@ -1,10 +1,17 @@
 import { Home } from "./Pages/home";
+import { InputDirectory } from "./Pages/input_directory";
+import {BrowserRouter as Router , Route, Switch} from 'react-router-dom';
 
 function App() {
   return (
-    <div className="m-0 p-0 bg-[#072650] h-screen">
-      <Home/>
-    </div>
+    <Router>
+      <div className="bg-[#072650] h-screen">
+        <Switch>
+          <Route path="/" exact component={Home}/>
+          <Route path="/upload_directory" exact component={InputDirectory}/>
+        </Switch>
+      </div>
+    </Router>
   );
 }
 
