@@ -6,6 +6,7 @@ import {
   Button,
   IconButton,
   Card,
+  Collapse
 } from "@material-tailwind/react";
 import { Link } from 'react-router-dom';
 
@@ -28,7 +29,7 @@ export function StickyNavbar() {
       </Typography>
       <Typography as="li" variant="small" className="p-1 font-normal">
         <a href="#" className="flex items-center hover:text-[#5210ad]">
-          Architechure
+          DataBase
         </a>
       </Typography>
       <Typography as="li" variant="small" className="p-1 font-normal">
@@ -40,19 +41,27 @@ export function StickyNavbar() {
   );
 
   return (
-    <div className=" max-h-[768px] w-full  pb-10 m-0 bg-transparent">
+    <div className=" max-h-[768px] w-full  pb-0 m-0 bg-transparent">
       <nav className="sticky top-0 z-10 h-max max-w-full rounded-none px-4 py-2 lg:px-8 lg:py-4 bg-transparent">
-        <div className="flex-nowrap items-center justify-between text-white mg:flex">
+        <div className="flex-nowrap items-center justify-between text-[#22227b] hover:text-[#5210ad] mg:flex">
           <div className="mr-5  justify-between flex items-center">
             <Typography
               as="a"
               href="#"
-              className="cursor-pointer py-1.5 font-medium text-lg w-max ">
+              className="cursor-pointer py-1.5 font-black text-3xl w-max ">
               DataDucks{" "}
-              <span className="text-gray-400 text-sm/[10px]">
+              <span className="text-[#4f4fa4] text-sm/[10px]">
                 (Intelligent Data Catalouging System)
               </span>
             </Typography>
+            
+            <div className="flex items-center gap-4 w-fit">
+            <div className="mx-4 hidden lg:block text-[#22227b]  w-max">
+              {navList}
+            </div>
+            <Button className="text-white bg-blue-800 hover:bg-blue-900 focus:ring-4 focus:outline-none focus:ring-blue-300  rounded-full  px-4 py-2 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
+              <Link to="/upload_directory">Upload Directory</Link>
+            </Button>
             <IconButton
               variant="text"
               className=" ml-auto h-6 w-6 text-inherit hover:bg-transparent focus:bg-transparent active:bg-transparent lg:hidden"
@@ -87,38 +96,32 @@ export function StickyNavbar() {
                 </svg>
               )}
             </IconButton>
-            <div className="flex items-center gap-4 w-fit">
-            <div className="mx-4 hidden lg:block text-white  w-max">
-              {navList}
-            </div>
             
           </div>
           </div>
-          <MobileNav className="text-white" open={openNav}>
+          <Collapse className="text-[#22227b] " open={openNav}>
           {navList}
           <div className="flex items-center gap-x-1"></div>
-        </MobileNav>
+        </Collapse>
          
           <div className="w-full">
             <form>
               <label
-                for="default-search"
-                class="mb-2 text-sm font-medium text-gray-900 sr-only dark:text-white">
-                Search
+                clasName="mb-2 text-sm font-medium text-gray-900 sr-only dark:text-white">
               </label>
-              <div class="relative">
-                <div class="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none rounded-full">
+              <div className="relative">
+                <div className="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none rounded-full">
                   <svg
-                    class="w-4 h-4 text-gray-500 dark:text-gray-400"
+                    className="w-4 h-4 text-gray-500 dark:text-gray-400"
                     aria-hidden="true"
                     xmlns="http://www.w3.org/2000/svg"
                     fill="none"
                     viewBox="0 0 20 20">
                     <path
                       stroke="currentColor"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
                       d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"
                     />
                   </svg>
@@ -126,13 +129,13 @@ export function StickyNavbar() {
                 <input
                   type="search"
                   id="default-search"
-                  class="block p-4 ps-10 text-sm text-gray-900 border border-gray-300 rounded-full bg-gray-50 hover:border-[#5210ad] w-full"
+                  className="block p-4 ps-10 text-sm text-gray-900 border border-gray-300 rounded-full bg-[#07255021] hover:border-[#5210ad] w-full"
                   placeholder="Search for Dataset"
                   required
                 />
                 <button
                   type="submit"
-                  class="text-white absolute end-2.5 bottom-2.5 bg-[#072650] hover:bg-[#5210ad] focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-full text-sm px-4 py-2 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
+                  className="text-white absolute end-2.5 bottom-2.5 bg-blue-800 hover:bg-blue-900 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-full text-sm px-4 py-2 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
                     Search
                 </button>
               </div>

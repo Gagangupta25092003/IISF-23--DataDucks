@@ -5,7 +5,7 @@ import {BrowserRouter as Router , Route, Switch} from 'react-router-dom';
 function App() {
   return (
     <Router>
-      <div className="bg-[#072650] h-screen">
+      <div className="bg-[#ffffff]">
         <Switch>
           <Route path="/" exact component={Home}/>
           <Route path="/upload_directory" exact component={InputDirectory}/>
