@@ -106,7 +106,7 @@ export function InputDirectory() {
             </div>
             <div className="text-xl flex items-center justify-center mt-5">
                 <Button className="text-white bg-[#285180] hover:bg-[#5210ad] focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-full text-lg px-4 py-2 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
-                <Link to="/">Go back to DataBase</Link>
+                <Link to="/database">Go back to DataBase</Link>
                 </Button>
             </div>
           </div>

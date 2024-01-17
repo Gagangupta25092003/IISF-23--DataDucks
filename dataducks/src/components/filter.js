@@ -62,7 +62,7 @@ const FilterComponent = () => {
                 geojson
               </label>
             </div>
-            <button className='bg-blue-800 w-32 text-xl text-white rounded-full hover:bg-blue-900'>
+            <button className='bg-blue-800 w-24 text-lg text-white rounded-full hover:bg-blue-900 mt-4'>
                 Apply
             </button>
           </div>

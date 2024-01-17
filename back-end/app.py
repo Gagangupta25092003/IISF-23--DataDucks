@@ -7,6 +7,7 @@ from flask_cors import CORS
 import json
 from metadata_extraction_pipeline import extract_metadata
 from metadata_tables import Common_Metadata, Geojson_Metadata, Tiff_Metadata, Las_Metadata, db as db_
+from file_parser import process_files
 
 ext_dir=[[".jpg", ".png", ".jpeg"], [".pdf"],[".txt"], [".py", ".cpp", ".js", ".java", ".css", ".html", ".json"], [".xlsx"], [".csv"], [".pptx"], [".doc"]]
 ext_dir_names = ["Image", "PDF", "Text", "Code Files", "Excel", "CSV", "Presentation", "Documentation"]
@@ -23,6 +24,17 @@ CORS(app)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:12345678@localhost/postgres'
 # db = SQLAlchemy(app)
 db_.init_app(app)
+
+def connect_to_db():
+    params = {
+        "database": "dataducks",
+        "user": "postgres",
+        "password": "12345678",
+        "host": "localhost",
+        "port": 5432,
+    }
+    conn = psycopg2.connect(**params)
+    return conn
 
 # class User(db.Model):
 #     __tablename__ = 'users'
@@ -47,73 +59,6 @@ db_.init_app(app)
 def index():
     return "Welcome Dataducks back-end Server"  
 
-# @app.route("/uploadmf", methods=["POST"])
-# def add_dir():
-#     input = request.get_json()                        
-#     dir_path = input.get('dir_path', '')
-#     print(dir_path)
-#     dir_metadata = []
-#     isdir = bool(os.path.isdir(dir_path))
-#     pathExists = bool(os.path.exists(dir_path))
-#     isFile = bool(os.path.isfile(dir_path))
-#     print("isdir: ", isdir)
-#     print("pathExists: ", pathExists)
-#     print("isFile: ", isFile)
-#     print()
-#     response_data = {'key': 'Invalid Path'}  
-#     response_data1 = {'key': 'Path should a directory not a File'}  
-#     response_data2 = {'key': 'Done Uploading'}  
-#     if pathExists == False:
-#         return jsonify(response_data)
-#     elif isFile:
-#         return jsonify(response_data1)
-#     else:
-#         for root, dirs, files in os.walk(dir_path):
-#             for file in files:
-#                 file_path = os.path.join(root, file)
-#                 size = os.path.getsize(file_path)
-#                 date = dt(2024,1,8)
-#                 ext = os.path.splitext(file)[1]
-#                 print(ext)
-#                 file_type = "Others"
-#                 for i in range(len(ext_dir)):
-#                     if ext in ext_dir[i]:
-#                         file_type = ext_dir_names[i]                   
-                
-#                 file_metadata = {
-#                     "Name": file,
-#                     "Location": file_path,
-#                     "Size": size,
-#                     "Date of creation": date,
-#                     "Type": file_type
-#                 }
-#                 # with app.app_context():
-#                 #     new_user = User(
-#                 #         name=file,
-#                 #         size=size,
-#                 #         location=file_path,
-#                 #         date_of_creation="2024-01-08",
-#                 #         type=file_type
-#                 #     )
-#                 #     db.session.add(new_user)
-#                 #     db.session.commit()
-#                 #     print(new_user)
-                
-#                 # dir_metadata.append(file_metadata)
-                
-         
-#         return jsonify(response_data2)
-    
-# @app.route("/get_database", methods=["GET"])
-# def get_files():
-#     # Retrieve all rows from the table
-#     # all_users = User.query.all()
-
-#     formatted_data = [{'id': user.id, 'name': user.name, 'size': user.size, 'location': user.location, 'date_of_creation': user.date_of_creation, 'type': user.type} for user in all_users]
-
-#     # Return the data as JSON
-#     return jsonify(formatted_data)
-
 
 @app.route("/upload", methods=["POST"])
 def add_directory():    
@@ -136,23 +81,8 @@ def add_directory():
     elif isFile:
         return jsonify(response_data1)
     else:
-        extracted_metadata = extract_metadata(dir_path)
-        for data in extract_metadata:
-            with app.app_context():
-                new_file = Common_Metadata(
-                    file_location=data["File Data"],
-                    file_size= data["File Size"],
-                    file_type= data["File Type"],
-                    name=data["File Name"],
-                    creation_date=data["Date of Creation"],
-                    source="",
-                    description="",
-                    additional_info=""
-                )
-                
-                db_.session.add(new_file)
-                db_.commit()
-                
+        conn = connect_to_db()
+        process_files(dir_path, conn)               
                 
     print("Folder's Files Added Succesfull")
 

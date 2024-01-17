@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 import {
   Navbar,
   MobileNav,
@@ -8,7 +9,6 @@ import {
   Card,
   Collapse
 } from "@material-tailwind/react";
-import { Link } from 'react-router-dom';
 
 export function StickyNavbar() {
   const [openNav, setOpenNav] = React.useState(false);
@@ -22,35 +22,28 @@ export function StickyNavbar() {
 
   const navList = (
     <ul className="mt-2 mb-4 flex flex-col gap-2 lg:mb-0 lg:mt-0 lg:flex-row lg:items-center lg:gap-6 ms-2">
+      
       <Typography as="li" variant="small" className="p-1 font-normal">
-        <a href="#" className="flex items-center hover:text-[#5210ad]">
-          About Us
-        </a>
+          <Link to="/" className="flex items-center hover:text-blue-900"> About </Link>         
       </Typography>
       <Typography as="li" variant="small" className="p-1 font-normal">
-        <a href="#" className="flex items-center hover:text-[#5210ad]">
-          DataBase
-        </a>
+          <Link to="/database" className="flex items-center hover:text-blue-900"> DataBase </Link>        
       </Typography>
-      <Typography as="li" variant="small" className="p-1 font-normal">
-        <a href="#" className="flex items-center hover:text-[#5210ad]">
-          Docs
-        </a>
-      </Typography>
+      
     </ul>
   );
 
   return (
     <div className=" max-h-[768px] w-full  pb-0 m-0 bg-transparent">
       <nav className="sticky top-0 z-10 h-max max-w-full rounded-none px-4 py-2 lg:px-8 lg:py-4 bg-transparent">
-        <div className="flex-nowrap items-center justify-between text-[#22227b] hover:text-[#5210ad] mg:flex">
+        <div className="flex-nowrap items-center justify-between text-blue-800 mg:flex">
           <div className="mr-5  justify-between flex items-center">
             <Typography
               as="a"
               href="#"
-              className="cursor-pointer py-1.5 font-black text-3xl w-max ">
+              className="cursor-pointer py-1.5 font-black text-3xl w-max hover:text-blue-900">
               DataDucks{" "}
-              <span className="text-[#4f4fa4] text-sm/[10px]">
+              <span className=" text-sm/[10px]">
                 (Intelligent Data Catalouging System)
               </span>
             </Typography>
