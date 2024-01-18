@@ -7,7 +7,8 @@ from datetime import datetime
 from flask_cors import CORS
 import json
 from metadata_tables import Common_Metadata, Geojson_Metadata, Tiff_Metadata, Las_Metadata, db as db_
-from file_parser import process_files, type_dict, size_dict
+from file_parser import process_files, type_dict, size_dict, analytics
+# from 
 
 import pickle
 from search_tool import search_files, all
@@ -157,20 +158,20 @@ def get_size():
     return jsonify(size_dict)
 
 @app.route("/analytics", methods=["GET"])
-def get_size():
+def get_analytics():
     file = {
-        "total_file" : total_files,
-        "file_types_len" : file_types_len,
-        "file_types" : file_types,
-        "max" : max_size,
-        "min" : min_size,
-        "size0" : size0,
-        "size1" : size1,
-        "size2" : size2,
-        "size3" : size3
-        
+        "total_files" : analytics["total_file"],
+        "file_types_len" : analytics["file_types_len"],
+        "file_types" : analytics["file_types"],
+        "file_type_distribution" : analytics["file_types_distribution"],
+        "max" : analytics["max"],
+        "min" : analytics["min"],
+        "size0" : analytics["size0"],
+        "size1" : analytics["size1"],
+        "size2" : analytics["size2"],
+        "size3" : analytics["size3"]
     }    
-    return jsonify(size_dict)
+    return jsonify(file)
 
 def setting_global_database():
     #global_database

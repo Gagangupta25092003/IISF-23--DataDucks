@@ -28,16 +28,18 @@ export function Home() {
         <ul className="flex flex-col items-center">
           {data.map((item, id) => (
             <div key={id} className="w-5/6">
-              <div className="py-2 px-5  hover:bg-blue-900/50 text-black text-md flex flex-row font-medium font=sm items-center my-1 border border-black rounded-full">
-                <div className="font-bold w-96">
-                  {item.file_name}
+              <Link to={`/view-geojson/${encodeURIComponent("/home/skycoder/Desktop/dataducks/dataducks/src/resources/Images/stations.geojson")}`}>
+                <div className="py-2 px-5  hover:bg-blue-900/50 text-black text-md flex flex-row font-medium font=sm items-center my-1 border border-black rounded-full">
+                  <div className="font-bold w-96">{item.file_name}</div>
+                  <div className="w-64">Type: {item.file_type}</div>
+                  <div className="w-64">
+                    Size: {(item.file_size / (1024 * 1024)).toFixed(2)}mb
+                  </div>
+                  <div className="w-72">
+                    Last Modified: {item.creation_date}{" "}
+                  </div>
                 </div>
-                <div className="w-64">Type: {item.file_type}</div>
-                <div className="w-64">
-                  Size: {(item.file_size / (1024 * 1024)).toFixed(2)}mb
-                </div>
-                <div className="w-72">Last Modified: {item.creation_date} </div>
-              </div>
+              </Link>
             </div>
           ))}
         </ul>

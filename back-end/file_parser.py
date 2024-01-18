@@ -47,6 +47,9 @@ with open('data_extensions.pkl', 'rb') as file:
 with open('data_size.pkl', 'rb') as file:
     size_dict = pickle.load(file)
 
+with open('analytics_file.pkl', 'rb') as file:
+    analytics = pickle.load(file)
+
 file_gis_extensions = {
     "vector": [
         ".shp",
@@ -836,13 +839,20 @@ def process_files(root_directory, conn):
                     root, file_ext = os.path.splitext(filename)
                     if file_ext not in type_dict:
                         type_dict.append(file_ext)
+                    
+                    analytics["file_types"] = type_dict
+                    analytics["file_types_len"] = len(type_dict)
 
                     # Update file type counts
                     file_type_counts[file_type] = file_type_counts.get(file_type, 0) + 1
 
                     # Update min and max file sizes
+                    print("HEllo")
                     size_dict["min"] = min(size_dict["min"], file_size)
                     size_dict["max"] = max(size_dict["max"], file_size)
+                    
+                    analytics["min"] = size_dict["min"]
+                    analytics["max"] = size_dict["max"]
 
                     file_info = {
                         "file_name": os.path.basename(file_path),
@@ -855,11 +865,28 @@ def process_files(root_directory, conn):
                         "total_access": 0,  # Placeholder for total access
                         "total_downloads": 0,  # Placeholder for total downloads
                     }
+                    
+                    print(file_info["file_size"])
+                    print("DOne")
+                    
+                    if file_info["file_size"] <= 1024*1024:
+                        analytics["size0"]+=1
+                    elif file_info["file_size"] <= 1024*1024*10:
+                        analytics["size1"]+=1
+                    elif file_info["file_size"] <= 1024*1024*10*10:
+                        analytics["size2"]+=1
+                    else:
+                        analytics["size3"]+=1
+                    
+                    
                     insert_metadata(conn, file_info)
+                    analytics["total_file"] +=1
                     print("Done Common Metadata")
 
                     file_category = classify_file_type(file_info["file_type"])
+                    print(file_category)
                     if file_category == "geojson":
+                        analytics["file_types_distribution"][0]+=1
                         convert_to_geojson(file_path)
                         try:
                             processed_gdf = geojson_processor.process_geojson("check.geojson")
@@ -868,6 +895,7 @@ def process_files(root_directory, conn):
                             print(e)
                         
                     elif file_category == "geotiff":
+                        analytics["file_types_distribution"][1]+=1
                         if file_info["file_type"] in multitemporal_extensions:
                             convert_multitemporal_to_geotiff(file_path)
                         elif file_info["file_type"] in compressed_raster_extensions:
@@ -882,6 +910,7 @@ def process_files(root_directory, conn):
                         
 
                     elif file_category == "las":
+                        analytics["file_types_distribution"][2]+=1
                         convert_lidar_to_las(file_path)
                         # Process 'check.las' and get the GeoDataFrame
                         try:
@@ -889,6 +918,8 @@ def process_files(root_directory, conn):
                             insert_las_metadata(conn, file_path, gdf)
                         except Exception as e:
                             print(e)
+                    else:
+                        analytics["file_types_distribution"][3]+=1
                         
                     print("Done File")
                     
@@ -904,4 +935,6 @@ def process_files(root_directory, conn):
          pickle.dump(type_dict, file)
     with open('data_size.pkl', 'wb') as file:
          pickle.dump(size_dict, file)
+    with open('analytics.pkl', 'wb') as file:
+         pickle.dump(analytics, file)
     # return file_type_counts, file_size_range
