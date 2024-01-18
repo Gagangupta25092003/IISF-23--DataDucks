@@ -29,7 +29,8 @@ import cv2
 from loguru import logger
 from concurrent.futures import ProcessPoolExecutor
 import rtree  # Import the R-tree library
-import osr
+from osgeo import osr
+
 from osgeo import osr
 from osgeo import ogr
 from osgeo import gdal
@@ -37,6 +38,14 @@ import psycopg2
 from shapely.geometry import box
 from shapely.wkb import dumps
 from osgeo import gdal
+from metadata_tables import Common_Metadata, Geojson_Metadata, Tiff_Metadata, Las_Metadata
+
+# Read the array from the file
+with open('data_extensions.pkl', 'rb') as file:
+    type_dict = list(pickle.load(file))
+
+with open('data_size.pkl', 'rb') as file:
+    size_dict = pickle.load(file)
 
 file_gis_extensions = {
     "vector": [
@@ -281,7 +290,7 @@ class GeoTIFFProcessor:
             return None
 
     def process_file(self, filename):
-        file_path = os.path.join(self.input_directory, filename)
+        file_path = filename
         try:
             metadata = self.extract_metadata(file_path)
 
@@ -596,43 +605,58 @@ def classify_file_type(file_extension):
         return "others"
 
 def insert_geojson_metadata(conn, gdf, file_path):
-    cursor = conn.cursor()
+    # cursor = conn.cursor()
+    
 
     ids = ",".join(map(str, gdf["id"].tolist()))
-    names = ",".join(gdf["name"].astype(str).tolist())
-    types = ",".join(gdf["type"].astype(str).tolist())
-    geometries = ";".join(gdf["geometry"].astype(str).tolist())
+    names = ",".join(gdf["name"].astype(str).tolist()).replace("None", "")
+    types = ",".join(gdf["type"].astype(str).tolist()).replace("None", "")
+    geometries = ";".join(gdf["geometry"].astype(str).tolist()).replace("None", "")
 
-    areas = ",".join(map(str, gdf["area"].tolist()))
-    lengths = ",".join(map(str, gdf["length"].tolist()))
-    bounding_boxes = ";".join(gdf["bounding_box"].tolist())
+    areas = ",".join(map(str, gdf["area"].tolist())).replace("None", "")
+    lengths = ",".join(map(str, gdf["length"].tolist())).replace("None", "")
+    bounding_boxes = ";".join(gdf["bounding_box"].tolist()).replace("None", "")
     h3_indices = ",".join(
         [",".join(h3_index.split(",")) for h3_index in gdf["h3_index"].tolist()]
-    )
+    ).replace("None", "")
+    
+    # cursor.execute(
+    #     """
+    #     INSERT INTO geojson_metadata (file_location, id, name, type, geometry, area, length, bounding_box, h3_index)
+    #     VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+    #     ON CONFLICT (file_path) DO NOTHING;
+    #     """,
+    #     (
+    #         file_path,
+    #         ids,
+    #         names,
+    #         types,
+    #         geometries,
+    #         areas,
+    #         lengths,
+    #         bounding_boxes,
+    #         h3_indices,
+    #     ),
+    # )
 
-    cursor.execute(
-        """
-        INSERT INTO geojson_metadata (file_path, id, name, type, geometry, area, length, bounding_box, h3_index)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
-        ON CONFLICT (file_path) DO NOTHING;
-        """,
-        (
-            file_path,
-            ids,
-            names,
-            types,
-            geometries,
-            areas,
-            lengths,
-            bounding_boxes,
-            h3_indices,
-        ),
+    # conn.commit()
+    
+    new_file = Geojson_Metadata(
+        file_location=file_path,
+        area=areas,
+        length=lengths,
+        bounding_box=bounding_boxes,
+        h3_index=h3_indices,
+        geometries=geometries,
+        data_types=types,
+        data_names=names
+        
     )
-
-    conn.commit()
+    conn.session.add(new_file)
+    conn.session.commit()
 
 def insert_tiff_metadata(conn, file_path, processed_data):
-    cursor = conn.cursor()
+    # cursor = conn.cursor()
 
     # Extract data from the processed_data dictionary
     metadata = processed_data.get("metadata", {})
@@ -653,27 +677,41 @@ def insert_tiff_metadata(conn, file_path, processed_data):
     caption_conditional = processed_data.get("caption_conditional", None)
     caption_unconditional = processed_data.get("caption_unconditional", None)
 
-    # SQL INSERT statement
-    cursor.execute(
-        """
-        INSERT INTO tiff_metadata (file_path, projection, geotransform, centerx, centery, bounding_box, caption_conditional, caption_unconditional)
-        VALUES (%s, %s, %s, %s, %s, ST_GeomFromWKB(%s), %s, %s)
-        ON CONFLICT (file_path) DO NOTHING;
-        """,
-        (
-            file_path,
-            projection,
-            geotransform,
-            centerx,
-            centery,
-            bounding_box_wkb,
-            caption_conditional,
-            caption_unconditional,
-        ),
-    )
+    # # SQL INSERT statement
+    # cursor.execute(
+    #     """
+    #     INSERT INTO tiff_metadata (file_location, projection, geotransform, centerx, centery, bounding_box, caption_conditional, caption_unconditional)
+    #     VALUES (%s, %s, %s, %s, %s, ST_GeomFromWKB(%s), %s, %s)
+    #     ON CONFLICT (file_path) DO NOTHING;
+    #     """,
+    #     (
+    #         file_path,
+    #         projection,
+    #         geotransform,
+    #         centerx,
+    #         centery,
+    #         bounding_box_wkb,
+    #         caption_conditional,
+    #         caption_unconditional,
+    #     ),
+    # )
 
-    # Commit the transaction
-    conn.commit()
+    # # Commit the transaction
+    # conn.commit()
+    
+    new_file=Tiff_Metadata(
+        file_location=file_path,
+        projection=projection,
+        centerx=centerx,
+        centery=centery,
+        bounding_box=bounding_box_wkb,
+        geotransform=geotransform,
+        caption_conditional=caption_conditional,
+        caption_unconditional=caption_unconditional
+    )
+    
+    conn.session.add(new_file)
+    conn.session.commit()
 
 
 
@@ -689,7 +727,7 @@ def insert_tiff_metadata(conn, file_path, processed_data):
     return conn
 
 def insert_las_metadata(conn, file_path, geospatial_index):
-    cursor = conn.cursor()
+    # cursor = conn.cursor()
 
     point_format = geospatial_index["point_format"][0]
     number_of_points = geospatial_index["number_of_points"][0]
@@ -713,48 +751,69 @@ def insert_las_metadata(conn, file_path, geospatial_index):
 
     h3_indices = ",".join(geospatial_index["h3_index"].astype(str))
 
-    cursor.execute(
-        """
-        INSERT INTO las_metadata (file_path, point_format, number_of_points, scale_factors, offsets, min_bounds, max_bounds, bounding_box, h3_index)
-        VALUES (%s, %s, %s, %s, %s, ST_GeomFromWKB(%s), ST_GeomFromWKB(%s), ST_GeomFromWKB(%s), %s)
-        ON CONFLICT (file_path) DO NOTHING;
-        """,
-        (
-            file_path,
-            point_format,
-            number_of_points,
-            scale_factors,
-            offsets,
-            min_bounds_wkb,
-            max_bounds_wkb,
-            bounding_box_wkb,
-            h3_indices,
-        ),
-    )
+    # cursor.execute(
+    #     """
+    #     INSERT INTO las_metadata (file_location, point_format, number_of_points, scale_factors, offsets, min_bounds, max_bounds, bounding_box, h3_index)
+    #     VALUES (%s, %s, %s, %s, %s, ST_GeomFromWKB(%s), ST_GeomFromWKB(%s), ST_GeomFromWKB(%s), %s)
+    #     ON CONFLICT (file_path) DO NOTHING;
+    #     """,
+    #     (
+    #         file_path,
+    #         point_format,
+    #         number_of_points,
+    #         scale_factors,
+    #         offsets,
+    #         min_bounds_wkb,
+    #         max_bounds_wkb,
+    #         bounding_box_wkb,
+    #         h3_indices,
+    #     ),
+    # )
 
-    conn.commit()
+    # conn.commit()
+    new_file = Las_Metadata(
+        file_location=file_path,
+        point_format=point_format,
+        number_of_points=number_of_points,
+        offsets=offsets,
+        min_bounds=min_bounds_wkb,
+        scale_factors=scale_factors,
+        max_bounds=max_bounds_wkb,
+        bounding_box=bounding_box_wkb,
+        h3_index=h3_indices
+    )
+    
+    conn.session.add(new_file)
+    conn.session.commit()
 
 def insert_metadata(conn, file_info):
-    cursor = conn.cursor()
-    cursor.execute(
-        """
-        INSERT INTO common_metadata (file_name, file_owner, file_path, file_type, file_size, creation_date, last_accessed, total_access, total_downloads)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
-        ON CONFLICT (file_path) DO NOTHING;
-        """,
-        (
-            file_info["file_name"],
-            file_info["file_owner"],
-            file_info["file_path"],
-            file_info["file_type"],
-            file_info["file_size"],
-            file_info["creation_date"],
-            file_info["last_accessed"],
-            file_info["total_access"],
-            file_info["total_downloads"],
-        ),
+    # cursor = conn.cursor()
+    # cursor.execute(
+    #     """
+    #     INSERT INTO common_metadata (file_name, file_location, file_type, file_size, creation_date)
+    #     VALUES (%s, %s, %s, %s, %s, %s)
+    #     ON CONFLICT (file_location) DO NOTHING;
+    #     """,
+    #     (
+    #         file_info["file_name"],
+    #         file_info["file_owner"],
+    #         file_info["file_path"],
+    #         file_info["file_type"],
+    #         file_info["file_size"],
+    #         file_info["creation_date"]
+    #     ),
+    # )
+    # conn.commit()
+    new_file = Common_Metadata(
+        file_name=file_info["file_name"],
+        file_location=file_info["file_path"],
+        file_type=file_info["file_type"],
+        file_size=file_info["file_size"],
+        creation_date=file_info["creation_date"],
+        last_accessed=file_info["creation_date"]        
     )
-    conn.commit()
+    conn.session.add(new_file)
+    conn.session.commit()
 
 def process_files(root_directory, conn):
     file_type_counts = {}  # Dictionary to count file types
@@ -762,58 +821,87 @@ def process_files(root_directory, conn):
         "min": float("inf"),
         "max": float("-inf"),
     }  # Dictionary to track min and max file sizes
-
+    print("Reached Process Files Function")
     for folder_name, subfolders, filenames in os.walk(root_directory):
         for filename in filenames:
             file_path = os.path.join(folder_name, filename)
             if os.path.isfile(file_path):
-                file_stats = os.stat(file_path)
-                file_type = pathlib.Path(file_path).suffix
-                file_size = file_stats.st_size
+                
+                try:
+                    print(filename)
+                    file_stats = os.stat(file_path)
+                    file_type = pathlib.Path(file_path).suffix
+                    file_size = file_stats.st_size
+                    
+                    file_ext = os.path.splitext(filename)
+                    if file_ext not in type_dict:
+                        type_dict.append(file_ext)
 
-                # Update file type counts
-                file_type_counts[file_type] = file_type_counts.get(file_type, 0) + 1
+                    # Update file type counts
+                    file_type_counts[file_type] = file_type_counts.get(file_type, 0) + 1
 
-                # Update min and max file sizes
-                file_size_range["min"] = min(file_size_range["min"], file_size)
-                file_size_range["max"] = max(file_size_range["max"], file_size)
+                    # Update min and max file sizes
+                    size_dict["min"] = min(size_dict["min"], file_size)
+                    size_dict["max"] = max(size_dict["max"], file_size)
 
-                file_info = {
-                    "file_name": os.path.basename(file_path),
-                    "file_owner": "",  # Placeholder for file owner
-                    "file_path": file_path,
-                    "file_type": file_type,
-                    "file_size": file_size,
-                    "creation_date": datetime.fromtimestamp(file_stats.st_ctime),
-                    "last_accessed": datetime.fromtimestamp(file_stats.st_atime),
-                    "total_access": 0,  # Placeholder for total access
-                    "total_downloads": 0,  # Placeholder for total downloads
-                }
+                    file_info = {
+                        "file_name": os.path.basename(file_path),
+                        "file_owner": "",  # Placeholder for file owner
+                        "file_path": file_path,
+                        "file_type": file_type,
+                        "file_size": file_size,
+                        "creation_date": datetime.fromtimestamp(file_stats.st_ctime),
+                        "last_accessed": datetime.fromtimestamp(file_stats.st_atime),
+                        "total_access": 0,  # Placeholder for total access
+                        "total_downloads": 0,  # Placeholder for total downloads
+                    }
+                    insert_metadata(conn, file_info)
+                    print("Done Common Metadata")
 
-                file_category = classify_file_type(file_info["file_type"])
-                if file_category == "geojson":
-                    convert_to_geojson(file_path)
-                    processed_gdf = geojson_processor.process_geojson("check.geojson")
-                    insert_geojson_metadata(conn, processed_gdf, file_path)
-                elif file_category == "geotiff":
-                    if file_info["file_type"] in multitemporal_extensions:
-                        convert_multitemporal_to_geotiff(file_path)
-                    elif file_info["file_type"] in compressed_raster_extensions:
-                        convert_compressed_raster_to_geotiff(file_path)
-                    else:
-                        convert_to_geotiff(file_path)
+                    file_category = classify_file_type(file_info["file_type"])
+                    if file_category == "geojson":
+                        convert_to_geojson(file_path)
+                        try:
+                            processed_gdf = geojson_processor.process_geojson("check.geojson")
+                            insert_geojson_metadata(conn, processed_gdf, file_path)
+                        except Exception as e:
+                            print(e)
+                        
+                    elif file_category == "geotiff":
+                        if file_info["file_type"] in multitemporal_extensions:
+                            convert_multitemporal_to_geotiff(file_path)
+                        elif file_info["file_type"] in compressed_raster_extensions:
+                            convert_compressed_raster_to_geotiff(file_path)
+                        else:
+                            convert_to_geotiff(file_path)
+                        try:
+                            result = geo_tiff_processor.process_file("check.tif")
+                            insert_tiff_metadata(conn, file_path, result)
+                        except Exception as e:
+                            print(e)
+                        
 
-                    result = geo_tiff_processor.process_file("check.tif")
-                    insert_tiff_metadata(conn, file_path, result)
-
-                elif file_category == "las":
-                    convert_lidar_to_las(file_path)
-                    # Process 'check.las' and get the GeoDataFrame
-                    gdf = las_file_processor.process_las_file("check.las")
-                    insert_las_metadata(conn, file_path, gdf)
-
+                    elif file_category == "las":
+                        convert_lidar_to_las(file_path)
+                        # Process 'check.las' and get the GeoDataFrame
+                        try:
+                            gdf = las_file_processor.process_las_file("check.las")
+                            insert_las_metadata(conn, file_path, gdf)
+                        except Exception as e:
+                            print(e)
+                        
+                    print("Done File")
+                    
+                except Exception as e:                    
+                    print(e)
+                
                 # else: Do nothing for 'others'
                 # Insert metadata into the database for each file
-                insert_metadata(conn, file_info)
-
-    return file_type_counts, file_size_range
+                # insert_metadata(conn, file_info)
+                
+    
+    with open('data_extensions.pkl', 'wb') as file:
+         pickle.dump(type_dict, file)
+    with open('data_size.pkl', 'wb') as file:
+         pickle.dump(size_dict, file)
+    # return file_type_counts, file_size_range

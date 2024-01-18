@@ -26,8 +26,9 @@ export function Home() {
         console.log("Error in fetching Data: ", error);
       }
     };
+    
+    // fetchData();
 
-    fetchData();
   }, []);
 
   return (

@@ -1,30 +1,28 @@
 from flask_sqlalchemy import SQLAlchemy
+from datetime import datetime
 
 db = SQLAlchemy()
 
 class Common_Metadata(db.Model):
     __tablename__ = 'common_metadata'
-    file_id = db.Coulumn(db.Int())
     file_location = db.Column(db.String(100), primary_key=True)
-    name = db.Column(db.String(255))
+    file_name = db.Column(db.String(255))
     file_size = db.Column(db.String(50))
     file_type = db.Column(db.String(50))
-    creation_date = db.Column(db.Date(50))
-    last_access = db.Column(db.Date(50))
+    creation_date = db.Column(db.DateTime, default=datetime.utcnow)
+    last_accessed = db.Column(db.String(50))
     
-    def __init__(self,file_id, name, file_size, file_location, creation_date, file_type, last_access, description, additional_info):
-        self.name = name
-        self.file_id = file_id
+    def __init__(self, file_name = "", file_size="", file_location="", creation_date = "2022-07-07", file_type="", last_accessed="", description="", additional_info=""):
+        self.file_name = file_name
         self.file_size = file_size
         self.file_location = file_location
         self.creation_date = creation_date
         self.file_type = file_type
-        self.last_access = last_access
+        self.last_accessed = last_accessed
         
 class Geojson_Metadata(db.Model):
     __tablename__ = 'geojson_metadata'
     file_location = db.Column(db.String(100), primary_key=True)
-    id = db.Column(db.Int())
     data_names = db.Column(db.String(10000))
     data_types = db.Column(db.String(20))
     area = db.Column(db.String(255))
@@ -33,13 +31,15 @@ class Geojson_Metadata(db.Model):
     h3_index = db.Column(db.String(50))
     geometries = db.Column(db.String(50))
     
-    def __init__(self, file_location, area, length, bounding_box, h3_index, geometries):
+    def __init__(self, file_location, area, length, bounding_box, h3_index, geometries, data_types, data_names):
         self.file_location = file_location
         self.area = area
         self.length = length
         self.bounding_box = bounding_box
         self.h3_index = h3_index 
         self.geometries = geometries
+        self.data_names=data_names
+        self.data_types=data_types
    
 class Tiff_Metadata(db.Model):
     __tablename__ = 'tiff_metadata'

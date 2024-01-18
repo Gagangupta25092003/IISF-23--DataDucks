@@ -1,0 +1,4 @@
+2024-01-18 02:00:44.353 | ERROR    | file_parser:process_file:320 - Error processing check.tif: Cannot handle this data type: (1, 1, 1), |u1
+2024-01-18 02:09:14.524 | ERROR    | file_parser:process_file:320 - Error processing check.tif: Cannot handle this data type: (1, 1, 1), |u1
+2024-01-18 02:19:41.657 | ERROR    | file_parser:process_file:320 - Error processing check.tif: Cannot handle this data type: (1, 1, 1), |u1
+2024-01-18 02:22:24.373 | ERROR    | file_parser:process_file:320 - Error processing check.tif: Cannot handle this data type: (1, 1, 1), |u1
