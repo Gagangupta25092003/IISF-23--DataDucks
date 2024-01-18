@@ -1,3 +1,5 @@
-str = "NoneNoneNoneNonedfsNone"
+from search_tool import search_files
 
-print(str.replace("None", ""))
+results = search_files(query="India" , location1="")
+print("asdf")
+for i in results:print(i)

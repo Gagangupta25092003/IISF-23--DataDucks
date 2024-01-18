@@ -15,7 +15,7 @@ export function About() {
 
   return (
     <div>
-      <StickyNavbar />
+      {/* <StickyNavbar /> */}
       <div>
         <div className="text-white z-5 absolute backdrop-filter backdrop-blur-md h-5/6">
           <div className="w-screen p-32 text-blue-100 text-md flex flex-col items-center font-bold">

@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify, render_template
 import os, datetime, psycopg2
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import create_engine
 from datetime import date as dt
 from datetime import datetime
 from flask_cors import CORS
@@ -9,6 +10,7 @@ from metadata_tables import Common_Metadata, Geojson_Metadata, Tiff_Metadata, La
 from file_parser import process_files, type_dict, size_dict
 
 import pickle
+from search_tool import search_files, all
 
 with open('data_extensions.pkl', 'rb') as file:
     type_dict = pickle.load(file)
@@ -17,7 +19,7 @@ with open('data_size.pkl', 'rb') as file:
     size_dict = pickle.load(file)
 
 
-
+global_database = ""
 ext_dir=[[".jpg", ".png", ".jpeg"], [".pdf"],[".txt"], [".py", ".cpp", ".js", ".java", ".css", ".html", ".json"], [".xlsx"], [".csv"], [".pptx"], [".doc"]]
 ext_dir_names = ["Image", "PDF", "Text", "Code Files", "Excel", "CSV", "Presentation", "Documentation"]
 conn = ""
@@ -34,6 +36,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:12345678@localhos
 # db = SQLAlchemy(app)
 db_.init_app(app)
 
+
 def connect_to_db():
     params = {
         "database": "geospatial",
@@ -45,7 +48,41 @@ def connect_to_db():
     conn = psycopg2.connect(**params)
     return conn
 
+@app.route("/search", methods=["POST"])
+def search():
+    input=request.get_json()
+    print()
+    print(input)
+    print()
+    
+    query = input.get("query", "")
+    latitude=input.get("latitude", "")
+    longitude=input.get("longitude", "")
+    coordinate=latitude+longitude
+    location=input.get("location", "")
+    data=[]
+    if query=="" and location=="" and coordinate=="":
+        data = all()
+    elif location == None or coordinate==None:
+        data = search_files(query=query, location1=location, coordinate1=coordinate)
+    print(data)
+    result = [{'file_name': i[1], 'file_type': i[2], 'file_size': i[3], 'creation_date': i[4]} for i in data]
+        
+        
+    return jsonify(result)
+    
 
+    
+@app.route("/filter", methods=["POST"])
+def filter():
+    input=request.get_json()
+    min_size=input.get("min_size", "")
+    max_size=input.get("max_size", "")
+    
+    input_string ="London"
+    
+    
+    
 
 @app.route("/")
 def index():
@@ -88,7 +125,12 @@ def get_size():
     
     return jsonify(size_dict)
 
+def setting_global_database():
+    #global_database
+    return "21"
+
 if __name__ == "__main__":
+    setting_global_database()
     app.run(debug=True)
     
 
