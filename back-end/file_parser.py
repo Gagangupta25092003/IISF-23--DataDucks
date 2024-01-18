@@ -833,7 +833,7 @@ def process_files(root_directory, conn):
                     file_type = pathlib.Path(file_path).suffix
                     file_size = file_stats.st_size
                     
-                    file_ext = os.path.splitext(filename)
+                    root, file_ext = os.path.splitext(filename)
                     if file_ext not in type_dict:
                         type_dict.append(file_ext)
 

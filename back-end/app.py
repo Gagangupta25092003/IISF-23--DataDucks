@@ -23,6 +23,10 @@ global_database = ""
 ext_dir=[[".jpg", ".png", ".jpeg"], [".pdf"],[".txt"], [".py", ".cpp", ".js", ".java", ".css", ".html", ".json"], [".xlsx"], [".csv"], [".pptx"], [".doc"]]
 ext_dir_names = ["Image", "PDF", "Text", "Code Files", "Excel", "CSV", "Presentation", "Documentation"]
 conn = ""
+
+query_ = ""
+location_ = ""
+coordinate_ = ""
 def convertDate(timestamp):
     d = datetime.datetime.utcfromtimestamp(timestamp)
     formatedDate = d.strftime('%b %d, %Y')
@@ -61,9 +65,16 @@ def search():
     coordinate=latitude+longitude
     location=input.get("location", "")
     data=[]
+    query_=query
+    location_=location
+    coordinate_=coordinate
     if query=="" and location=="" and coordinate=="":
         data = all()
-    elif location == None or coordinate==None:
+        result = [{'file_name': i[1], 'file_type': i[3], 'file_size': i[4], 'creation_date': i[6]} for i in data]
+        
+        
+        return jsonify(result)
+    elif location == "" or coordinate=="":
         data = search_files(query=query, location1=location, coordinate1=coordinate)
     print(data)
     result = [{'file_name': i[1], 'file_type': i[2], 'file_size': i[3], 'creation_date': i[4]} for i in data]
@@ -76,10 +87,30 @@ def search():
 @app.route("/filter", methods=["POST"])
 def filter():
     input=request.get_json()
-    min_size=input.get("min_size", "")
-    max_size=input.get("max_size", "")
+    min_size=int(input.get("min_size", ""))
+    max_size=int(input.get("max_size", ""))
+    file_types = list(input.get("file_types", ""))
     
-    input_string ="London"
+    print("min size", min_size)
+    print("max_size", max_size)
+    print("file types", file_types)
+    
+    if query_=="" and location_=="" and coordinate_=="":
+        data = all()
+        result = [{'file_name': i[1], 'file_type': i[3], 'file_size': i[4], 'creation_date': i[6]} for i in data]
+        
+    elif location_ == "" or coordinate_=="":
+        data = search_files(query=query_, location1=location_, coordinate1=coordinate_)
+        print(data)
+        result = [{'file_name': i[1], 'file_type': i[2], 'file_size': i[3], 'creation_date': i[4]} for i in data]
+    
+    final_result = []
+    for i in result:
+        if i["file_size"] > max_size or i["file_size"] <min_size:
+            continue
+        if i["file_type"] in file_types or len(file_types) == 0:
+            final_result.append(i)
+    return jsonify(final_result)
     
     
     
@@ -123,6 +154,22 @@ def get_type():
 @app.route("/getsize_info", methods=["GET"])
 def get_size():
     
+    return jsonify(size_dict)
+
+@app.route("/analytics", methods=["GET"])
+def get_size():
+    file = {
+        "total_file" : total_files,
+        "file_types_len" : file_types_len,
+        "file_types" : file_types,
+        "max" : max_size,
+        "min" : min_size,
+        "size0" : size0,
+        "size1" : size1,
+        "size2" : size2,
+        "size3" : size3
+        
+    }    
     return jsonify(size_dict)
 
 def setting_global_database():

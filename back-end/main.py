@@ -1,5 +1,9 @@
-from search_tool import search_files
-
-results = search_files(query="India" , location1="")
-print("asdf")
-for i in results:print(i)
+import pickle
+# type_dict=[]
+# with open('data_extensions.pkl', 'wb') as file:
+#     pickle.dump(type_dict, file)
+    
+with open('data_extensions.pkl', 'rb') as file:
+    type_dict = list(pickle.load(file))
+    
+print(type_dict)
