@@ -1,10 +1,62 @@
 import React, { useEffect, useState } from "react";
 import downicon from "../resources/Images/arrow_down.png";
 
-const FilterComponent = () => {
+const FilterComponent = (props) => {
   const [showFilters, setShowFilters] = useState(false);
   const [size, setSize] = useState([]);
   const [data_type, setType] = useState([]);
+  const [minsize, setminsize] = useState(0);
+  const [maxsize, setmaxsize] = useState(0);
+  const [selectedValues, setSelectedValues] = useState([]);
+
+  const handleCheckboxChange = (value) => {
+    const isElementPresent = selectedValues.includes(value.value);
+
+    if (isElementPresent) {
+      // Remove the element if it is present
+      const updatedArray = selectedValues.filter(item => item !== value.value);
+      setSelectedValues(updatedArray);
+    } else {
+      // Add the element if it is not present
+      setSelectedValues(prevArray => [...selectedValues, value.value]);
+    }
+  };
+
+  const Apply = (e) => {
+    e.preventDefault();
+    console.log("Applying Filter")
+    setTimeout(() => {
+      const requestBody = {
+        min_size: minsize,
+        max_size: maxsize,
+        file_types: selectedValues,
+      };
+      console.log(requestBody);
+      return fetch(`http://localhost:5000/filter`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(requestBody),
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          // Handle the data
+          console.log(data);
+          const jsonResponse = JSON.parse(JSON.stringify(data));
+
+          // Access the data of a specific key
+          const keyData = jsonResponse.key;
+          console.log("Output....");
+          props.ChangeData(data);
+          console.log("keyData", keyData);
+        })
+        .catch((error) => {
+          console.log(error);
+          console.log("Error in Response");
+        });
+    }, 1000);
+  };
 
   const handleButtonClick = () => {
     setShowFilters(!showFilters);
@@ -59,6 +111,8 @@ const FilterComponent = () => {
                   type="number"
                   className="mr-2 w-16 border-b border-blue-900"
                   placeholder=" in mb"
+                  value={minsize}
+                  onChange={(e)=>setminsize(e.target.value)}
                 />
                 Min. : {size.min}
               </label>
@@ -67,6 +121,8 @@ const FilterComponent = () => {
                   type="number"
                   className="mr-2 w-16 border-b border-blue-900"
                   placeholder=" in mb"
+                  value={maxsize}
+                  onChange={(e)=>setmaxsize(e.target.value)}
                 />
                 Max. : {size.max}
               </label>
@@ -75,13 +131,18 @@ const FilterComponent = () => {
 
           {/* File Type Filter */}
           <div className="mb-4">
-            <h3 className="text-lg font-bold font-medium ">File Type</h3>
+            <h3 className="text-lg font-bold">File Type</h3>
             <div className="">
               <ul className="flex flex-wrap">
                 {data_type.map((value, index) => (
-                  <div key={index}>
+                  <div key={index} className="mx-2">
                     <label>
-                      <input type="checkbox" className="mr-2 bg-black" />
+                      <input
+                        type="checkbox"
+                        className="mr-2 bg-black"
+                        // checked={selectedValues.includes({value})}
+                        onChange={() => handleCheckboxChange({value})}
+                      />
                       {value}
                       {console.log(index)}
                     </label>
@@ -89,7 +150,7 @@ const FilterComponent = () => {
                 ))}
               </ul>
             </div>
-            <button className="bg-blue-800 w-24 text-lg text-white rounded-full hover:bg-blue-900 mt-4">
+            <button className="bg-blue-800 w-24 text-lg text-white rounded-full hover:bg-blue-900 mt-4" onClick={Apply}>
               Apply
             </button>
           </div>

@@ -9,10 +9,14 @@
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
     "axios": "^1.6.5",
+    "jszip": "^3.10.1",
+    "leaflet": "^1.9.4",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "react-leaflet": "^4.2.1",
     "react-router-dom": "^5.3.4",
     "react-scripts": "5.0.1",
+    "togeojson": "^0.16.0",
     "web-vitals": "^2.1.4"
   },
   "scripts": {
